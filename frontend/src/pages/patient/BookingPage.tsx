@@ -64,7 +64,7 @@ export function BookingPage() {
     }
   }, [preselect, slots.data, slot]);
 
-  const form = useForm<ReviewValues>({ resolver: zodResolver(reviewSchema), defaultValues: { mode: 'VIDEO', reasonForVisit: '' } });
+  const form = useForm<ReviewValues>({ resolver: zodResolver(reviewSchema), defaultValues: { mode: 'CHAT', reasonForVisit: '' } });
   const review = form.watch();
 
   const booking = useMutation({
@@ -210,9 +210,8 @@ export function BookingPage() {
               </h1>
               <p className="mt-1 text-muted">Add anything your doctor should know before you meet.</p>
               <div className="mt-6 space-y-5">
-                <Select label="Consultation type" {...form.register('mode')}>
-                  <option value="VIDEO">Video call</option>
-                  <option value="AUDIO">Audio call</option>
+                {/* Video and audio calls are hidden until real media is supported; the backend still accepts them. */}
+                <Select label="Consultation type" hint="Video and audio calls are coming soon." {...form.register('mode')}>
                   <option value="CHAT">Chat</option>
                 </Select>
                 <Textarea
