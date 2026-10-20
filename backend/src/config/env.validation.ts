@@ -47,9 +47,11 @@ export class EnvironmentVariables {
   @IsString()
   LOG_LEVEL = 'info';
 
-  @Transform(toBool)
+  /** Swagger UI at /docs. Defaults to on outside production and off in production; set explicitly to override. */
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : toBool({ value })))
   @IsBoolean()
-  SWAGGER_ENABLED = true;
+  SWAGGER_ENABLED?: boolean;
 
   @IsString()
   @Matches(/^postgres(ql)?:\/\//, { message: 'DATABASE_URL must be a postgresql:// connection string' })

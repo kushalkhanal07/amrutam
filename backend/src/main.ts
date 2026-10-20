@@ -56,8 +56,9 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  if (config.get('SWAGGER_ENABLED') && !config.isProduction) {
+  if (config.swaggerEnabled) {
     setupSwagger(app);
+    logger.log('Swagger UI enabled at /docs');
   }
 
   app.enableShutdownHooks(); // SIGTERM -> close server, run OnModuleDestroy hooks (Prisma, worker)

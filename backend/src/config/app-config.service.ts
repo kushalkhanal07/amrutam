@@ -33,6 +33,11 @@ export class AppConfigService {
       .filter(Boolean);
   }
 
+  /** Explicit SWAGGER_ENABLED wins; otherwise on in development/test and off in production. */
+  get swaggerEnabled(): boolean {
+    return this.get('SWAGGER_ENABLED') ?? !this.isProduction;
+  }
+
   get stripeConfigured(): boolean {
     return Boolean(this.get('STRIPE_SECRET_KEY'));
   }
