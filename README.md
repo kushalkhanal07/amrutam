@@ -130,5 +130,4 @@ Design and operations documents live in [`backend/docs/`](backend/docs/):
 ## Known limitations
 
 - Video and audio consultations are simulated. The room shows the local camera or microphone, but no media is sent to the other participant. Chat is fully real time.
-- Email delivery requires SMTP credentials. Without them the notification worker logs the email, including the join link, instead of sending it.
 - The payment mock is for local development only.
