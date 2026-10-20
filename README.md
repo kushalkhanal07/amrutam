@@ -14,6 +14,22 @@ This repository is a monorepo with two apps:
 Each app has its own README with full details: [backend/README.md](backend/README.md) and
 [frontend/README.md](frontend/README.md).
 
+## Live demo
+
+| | URL |
+|---|---|
+| Web app | https://amruttam.netlify.app/ |
+| API docs (Swagger UI) | https://amrutam-api.onrender.com/docs |
+| API health check | https://amrutam-api.onrender.com/health |
+
+Sign in with a demo account (password `Password123!`): `patient@amrutam.local`, `dr.meera@amrutam.local`
+or `admin@amrutam.local`. The API runs on a free Render instance, so the first request after a quiet
+period can take about 30 seconds while it wakes up.
+
+To try an endpoint in Swagger: call `POST /auth/login` with a demo account, copy the `accessToken`
+from the response, click **Authorize** at the top of the page and paste the token. Every request
+after that is sent as that user.
+
 ## Quick start
 
 Prerequisites: Node.js 20 or newer, npm 10 or newer, Docker Desktop.
