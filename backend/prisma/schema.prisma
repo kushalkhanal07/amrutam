@@ -1,0 +1,418 @@
+// Amrutam Telemedicine data model.
+// Money is stored as integer minor units (e.g. paise / cents) + ISO 4217 currency.
+// All timestamps are timestamptz stored in UTC.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum DoctorVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ConsultationMode {
+  VIDEO
+  AUDIO
+  CHAT
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  MOCK
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Users & auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  role         Role       @default(PATIENT)
+  status       UserStatus @default(ACTIVE)
+  mfaEnabled   Boolean    @default(false) @map("mfa_enabled")
+  // AES-256-GCM encrypted TOTP secret; never returned by the API.
+  mfaSecret    String?    @map("mfa_secret")
+  lastLoginAt  DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  profile                Profile?
+  doctor                 Doctor?
+  refreshTokens          RefreshToken[]
+  patientConsultations   Consultation[]   @relation("PatientConsultations")
+  cancelledConsultations Consultation[]   @relation("CancelledBy")
+  payments               Payment[]
+  prescriptions          Prescription[]   @relation("PatientPrescriptions")
+  notifications          NotificationJob[]
+  auditLogs              AuditLog[]
+  idempotencyRecords     IdempotencyRecord[]
+  chatMessages           ChatMessage[]    @relation("SentChatMessages")
+
+  @@index([role])
+  @@map("users")
+}
+
+model Profile {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  phone       String?
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  gender      Gender    @default(UNDISCLOSED)
+  timezone    String    @default("Asia/Kolkata")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model RefreshToken {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  // SHA-256 hash of the opaque token. The raw token is only ever returned once.
+  tokenHash    String    @unique @map("token_hash")
+  // All tokens issued through rotation share a family; reuse revokes the family.
+  familyId     String    @map("family_id") @db.Uuid
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(3)
+  replacedById String?   @map("replaced_by_id") @db.Uuid
+  userAgent    String?   @map("user_agent")
+  ip           String?
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Doctors & availability
+// ---------------------------------------------------------------------------
+
+model Doctor {
+  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String                   @unique @map("user_id") @db.Uuid
+  specialization       String
+  qualifications       String[]                 @default([])
+  bio                  String?
+  yearsOfExperience    Int                      @default(0) @map("years_of_experience")
+  languages            String[]                 @default([])
+  consultationFeeMinor Int                      @map("consultation_fee_minor")
+  currency             String                   @default("INR") @db.Char(3)
+  verificationStatus   DoctorVerificationStatus @default(PENDING) @map("verification_status")
+  ratingAverage        Decimal?                 @map("rating_average") @db.Decimal(3, 2)
+  ratingCount          Int                      @default(0) @map("rating_count")
+  createdAt            DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slots         AvailabilitySlot[]
+  consultations Consultation[]
+  prescriptions Prescription[]
+
+  @@index([specialization])
+  @@index([verificationStatus, specialization])
+  @@index([consultationFeeMinor])
+  @@map("doctors")
+}
+
+model AvailabilitySlot {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doctorId  String     @map("doctor_id") @db.Uuid
+  startsAt  DateTime   @map("starts_at") @db.Timestamptz(3)
+  endsAt    DateTime   @map("ends_at") @db.Timestamptz(3)
+  status    SlotStatus @default(AVAILABLE)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  doctor        Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  consultations Consultation[]
+
+  // A doctor cannot have two slots starting at the same instant.
+  @@unique([doctorId, startsAt])
+  @@index([doctorId, status, startsAt])
+  @@index([status, startsAt])
+  @@map("availability_slots")
+}
+
+// ---------------------------------------------------------------------------
+// Consultations & prescriptions
+// ---------------------------------------------------------------------------
+
+model Consultation {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId          String             @map("patient_id") @db.Uuid
+  doctorId           String             @map("doctor_id") @db.Uuid
+  // Partial unique index (see migration 20261019150000): at most one
+  // non-cancelled consultation per slot, enforced by PostgreSQL.
+  slotId             String             @map("slot_id") @db.Uuid
+  status             ConsultationStatus @default(SCHEDULED)
+  mode               ConsultationMode   @default(VIDEO)
+  scheduledStartsAt  DateTime           @map("scheduled_starts_at") @db.Timestamptz(3)
+  scheduledEndsAt    DateTime           @map("scheduled_ends_at") @db.Timestamptz(3)
+  reasonForVisit     String?            @map("reason_for_visit")
+  startedAt          DateTime?          @map("started_at") @db.Timestamptz(3)
+  endedAt            DateTime?          @map("ended_at") @db.Timestamptz(3)
+  cancelledAt        DateTime?          @map("cancelled_at") @db.Timestamptz(3)
+  cancelledById      String?            @map("cancelled_by_id") @db.Uuid
+  cancellationReason String?            @map("cancellation_reason")
+  // Doctor's clinical notes: sensitive, never logged.
+  doctorNotes        String?            @map("doctor_notes")
+  // Identifier returned by the (simulated) video provider.
+  videoSessionId     String?            @map("video_session_id")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  patient      User             @relation("PatientConsultations", fields: [patientId], references: [id], onDelete: Restrict)
+  doctor       Doctor           @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  slot         AvailabilitySlot @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  cancelledBy  User?            @relation("CancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  prescription Prescription?
+  payment      Payment?
+  messages     ChatMessage[]
+
+  @@index([patientId, status, scheduledStartsAt])
+  @@index([doctorId, status, scheduledStartsAt])
+  @@index([status, scheduledStartsAt])
+  @@index([slotId])
+  @@index([createdAt])
+  @@map("consultations")
+}
+
+// Real-time chat between the patient and the doctor during a consultation.
+// Clinical content: never logged.
+model ChatMessage {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultationId String   @map("consultation_id") @db.Uuid
+  senderId       String   @map("sender_id") @db.Uuid
+  text           String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("SentChatMessages", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([consultationId, createdAt])
+  @@map("chat_messages")
+}
+
+model Prescription {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultationId String    @unique @map("consultation_id") @db.Uuid
+  doctorId       String    @map("doctor_id") @db.Uuid
+  patientId      String    @map("patient_id") @db.Uuid
+  diagnosis      String
+  instructions   String?
+  issuedAt       DateTime  @default(now()) @map("issued_at") @db.Timestamptz(3)
+  validUntil     DateTime? @map("valid_until") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  consultation Consultation       @relation(fields: [consultationId], references: [id], onDelete: Restrict)
+  doctor       Doctor             @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  patient      User               @relation("PatientPrescriptions", fields: [patientId], references: [id], onDelete: Restrict)
+  items        PrescriptionItem[]
+
+  @@index([patientId, issuedAt])
+  @@index([doctorId, issuedAt])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prescriptionId String  @map("prescription_id") @db.Uuid
+  medicationName String  @map("medication_name")
+  dosage         String
+  frequency      String
+  durationDays   Int     @map("duration_days")
+  notes          String?
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+  @@map("prescription_items")
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultationId    String          @unique @map("consultation_id") @db.Uuid
+  patientId         String          @map("patient_id") @db.Uuid
+  amountMinor       Int             @map("amount_minor")
+  currency          String          @db.Char(3)
+  status            PaymentStatus   @default(PENDING)
+  provider          PaymentProvider
+  // Provider reference (Stripe PaymentIntent id). Unique so a provider object
+  // can never be attached to two payments.
+  providerPaymentId String?         @unique @map("provider_payment_id")
+  providerRefundId  String?         @map("provider_refund_id")
+  failureReason     String?         @map("failure_reason")
+  paidAt            DateTime?       @map("paid_at") @db.Timestamptz(3)
+  refundedAt        DateTime?       @map("refunded_at") @db.Timestamptz(3)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  consultation Consultation   @relation(fields: [consultationId], references: [id], onDelete: Restrict)
+  patient      User           @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  events       PaymentEvent[]
+
+  @@index([patientId, createdAt])
+  @@index([status, createdAt])
+  @@map("payments")
+}
+
+// Every provider callback is recorded once; the unique provider event id makes
+// duplicate webhook deliveries harmless.
+model PaymentEvent {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId       String?  @map("payment_id") @db.Uuid
+  providerEventId String   @unique @map("provider_event_id")
+  type            String
+  payload         Json
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([paymentId])
+  @@map("payment_events")
+}
+
+// ---------------------------------------------------------------------------
+// Cross-cutting: audit, idempotency, notifications
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  actorRole  Role?    @map("actor_role")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  // Non-sensitive context only (ids, statuses). Never clinical content.
+  metadata   Json?
+  ip         String?
+  userAgent  String?  @map("user_agent")
+  requestId  String?  @map("request_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model IdempotencyRecord {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  key          String
+  requestHash  String    @map("request_hash")
+  statusCode   Int?      @map("status_code")
+  responseBody Json?     @map("response_body")
+  lockedAt     DateTime  @default(now()) @map("locked_at") @db.Timestamptz(3)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(3)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+model NotificationJob {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type        String
+  channel     NotificationChannel @default(EMAIL)
+  recipientId String              @map("recipient_id") @db.Uuid
+  payload     Json
+  status      NotificationStatus  @default(PENDING)
+  attempts    Int                 @default(0)
+  maxAttempts Int                 @default(5) @map("max_attempts")
+  nextRunAt   DateTime            @default(now()) @map("next_run_at") @db.Timestamptz(3)
+  lastError   String?             @map("last_error")
+  sentAt      DateTime?           @map("sent_at") @db.Timestamptz(3)
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt])
+  @@index([recipientId])
+  @@map("notification_jobs")
+}

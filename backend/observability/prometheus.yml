@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: amrutam-api
+    metrics_path: /metrics
+    static_configs:
+      # host.docker.internal resolves to the host machine when the API runs outside Docker.
+      - targets: ['host.docker.internal:3000', 'api:3000']
+        labels:
+          service: amrutam-backend

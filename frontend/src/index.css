@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Amrutam design tokens
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-forest: #245c45;
+  --color-forest-deep: #173f32;
+  --color-forest-soft: #2f6f55;
+  --color-sage: #dce8dc;
+  --color-mint: #eff5ef;
+  --color-cream: #faf8f2;
+  --color-ink: #24342d;
+  --color-muted: #748078;
+  --color-line: #e5eae4;
+  --color-success: #287d52;
+  --color-warning: #a66b16;
+  --color-error: #b94242;
+  --color-success-soft: #e6f3ec;
+  --color-warning-soft: #f8efe0;
+  --color-error-soft: #f8e7e7;
+  --color-amber: #c9a24d;
+
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora', ui-serif, Georgia, serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-soft: 0 1px 2px rgba(23, 63, 50, 0.04), 0 4px 16px rgba(23, 63, 50, 0.06);
+  --shadow-lift: 0 2px 4px rgba(23, 63, 50, 0.06), 0 12px 28px rgba(23, 63, 50, 0.1);
+  --shadow-ring: 0 0 0 3px rgba(36, 92, 69, 0.18);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    font-size: 15.5px;
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply text-ink;
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: #dce8dc;
+  }
+  :focus-visible {
+    outline: 2px solid #245c45;
+    outline-offset: 2px;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  .surface {
+    @apply bg-white border border-line rounded-lg;
+    box-shadow: var(--shadow-soft);
+  }
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-forest;
+  }
+  .leaf-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(36, 92, 69, 0.12) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: rise 0.5s var(--ease-out-soft) both;
+  }
+  .animate-fade {
+    animation: fade 0.3s ease-out both;
+  }
+  .shimmer {
+    background: linear-gradient(90deg, #eff5ef 25%, #e4ece4 37%, #eff5ef 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

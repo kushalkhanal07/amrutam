@@ -1,0 +1,74 @@
+name: amrutam
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: amrutam-postgres
+    environment:
+      POSTGRES_USER: amrutam
+      POSTGRES_PASSWORD: amrutam
+      POSTGRES_DB: amrutam
+    ports:
+      - '${POSTGRES_PORT:-5434}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U amrutam -d amrutam']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: production
+    container_name: amrutam-api
+    profiles: ['app']
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://amrutam:amrutam@postgres:5432/amrutam?schema=public
+      PORT: 3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+
+  # ---- Observability stack (optional) -------------------------------------
+  #   docker compose --profile observability up
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: amrutam-prometheus
+    profiles: ['observability']
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: amrutam-grafana
+    profiles: ['observability']
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - '3001:3000'
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/jaeger:2.9.0
+    container_name: amrutam-jaeger
+    profiles: ['observability']
+    ports:
+      - '16686:16686' # UI
+      - '4318:4318' # OTLP HTTP
+
+volumes:
+  postgres-data:
