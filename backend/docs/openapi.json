@@ -1,0 +1,2543 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/admin/audit-logs": {
+      "get": {
+        "operationId": "AuditLogsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "booking.created",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "Consultation",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List audit events (admin only)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a patient or doctor account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenPairResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaRequiredResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login. Returns tokens, or an MFA challenge for MFA-enabled accounts",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "operationId": "AuthController_verifyMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Complete an MFA login challenge",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPairResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate a refresh token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke the refresh token family for this device",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/setup": {
+      "post": {
+        "operationId": "AuthController_setupMfa",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate a TOTP secret (doctor/admin). Returns the secret once.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/enable": {
+      "post": {
+        "operationId": "AuthController_enableMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm the TOTP secret with a code and enable MFA",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/disable": {
+      "post": {
+        "operationId": "AuthController_disableMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disable MFA (requires a valid current code)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Current user and profile",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update own profile",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATIENT",
+                "DOCTOR",
+                "ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List users (admin)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a user by id (admin)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/role": {
+      "patch": {
+        "operationId": "UsersController_changeRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a user role (admin, audited)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/status": {
+      "patch": {
+        "operationId": "UsersController_changeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend or reactivate a user (admin, audited)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/doctors": {
+      "get": {
+        "operationId": "DoctorsController_search",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "specialization",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive match on specialization",
+            "schema": {
+              "example": "Ayurveda",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free text over name and bio",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "hi",
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxFeeMinor",
+            "required": false,
+            "in": "query",
+            "description": "Max fee in minor units",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "minExperience",
+            "required": false,
+            "in": "query",
+            "description": "Minimum years of experience",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "availableFrom",
+            "required": false,
+            "in": "query",
+            "description": "Only doctors with an AVAILABLE slot starting after this time (ISO 8601). Defaults to now when availableOnly=true.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "availableTo",
+            "required": false,
+            "in": "query",
+            "description": "Only doctors with an AVAILABLE slot before this time (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "availableOnly",
+            "required": false,
+            "in": "query",
+            "description": "Only doctors with at least one open future slot",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "rating",
+              "type": "string",
+              "enum": [
+                "fee",
+                "experience",
+                "rating",
+                "createdAt"
+              ]
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Search verified doctors with filters, sorting and pagination",
+        "tags": [
+          "doctors"
+        ]
+      }
+    },
+    "/doctors/me": {
+      "get": {
+        "operationId": "DoctorsController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Own doctor profile",
+        "tags": [
+          "doctors"
+        ]
+      },
+      "post": {
+        "operationId": "DoctorsController_createMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDoctorProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create own doctor profile (starts as PENDING verification)",
+        "tags": [
+          "doctors"
+        ]
+      },
+      "patch": {
+        "operationId": "DoctorsController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDoctorProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update own doctor profile",
+        "tags": [
+          "doctors"
+        ]
+      }
+    },
+    "/doctors/{id}": {
+      "get": {
+        "operationId": "DoctorsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public doctor profile",
+        "tags": [
+          "doctors"
+        ]
+      }
+    },
+    "/doctors/{id}/availability": {
+      "get": {
+        "operationId": "DoctorsController_availabilityFor",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to now",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to from + 14 days",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Available (unbooked, future) slots for a doctor",
+        "tags": [
+          "doctors"
+        ]
+      }
+    },
+    "/doctors/{id}/verification": {
+      "patch": {
+        "operationId": "DoctorsController_verify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyDoctorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Verify or reject a doctor (admin, audited)",
+        "tags": [
+          "doctors"
+        ]
+      }
+    },
+    "/availability": {
+      "get": {
+        "operationId": "AvailabilityController_listMine",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to now",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to from + 14 days",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Own slots (all statuses) in a range",
+        "tags": [
+          "availability"
+        ]
+      },
+      "post": {
+        "operationId": "AvailabilityController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSlotsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create explicit slots",
+        "tags": [
+          "availability"
+        ]
+      }
+    },
+    "/availability/generate": {
+      "post": {
+        "operationId": "AvailabilityController_generate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateSlotsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate equal-length slots across a time range",
+        "tags": [
+          "availability"
+        ]
+      }
+    },
+    "/availability/{id}/block": {
+      "post": {
+        "operationId": "AvailabilityController_block",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block an available slot",
+        "tags": [
+          "availability"
+        ]
+      }
+    },
+    "/availability/{id}/unblock": {
+      "post": {
+        "operationId": "AvailabilityController_unblock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unblock a blocked slot",
+        "tags": [
+          "availability"
+        ]
+      }
+    },
+    "/availability/{id}": {
+      "delete": {
+        "operationId": "AvailabilityController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unbooked slot",
+        "tags": [
+          "availability"
+        ]
+      }
+    },
+    "/bookings": {
+      "post": {
+        "operationId": "BookingsController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Client-generated unique key (UUID recommended). Retries with the same key return the original result.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Consultation created (status SCHEDULED, payment PENDING)"
+          },
+          "409": {
+            "description": "Slot already booked, or idempotent request still in progress"
+          },
+          "422": {
+            "description": "Idempotency-Key reused with a different payload"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Book an available slot. Requires an Idempotency-Key header.",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Booking details (alias of GET /consultations/:id)",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/bookings/{id}/cancel": {
+      "post": {
+        "operationId": "BookingsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBookingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a scheduled booking (patient, doctor or admin). Releases the slot and refunds/voids payment.",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/consultations": {
+      "get": {
+        "operationId": "ConsultationsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHEDULED",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "CANCELLED",
+                "NO_SHOW"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List consultations visible to the caller",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/consultations/{id}": {
+      "get": {
+        "operationId": "ConsultationsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Consultation details (owner or admin)",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/consultations/{id}/prescription": {
+      "get": {
+        "operationId": "ConsultationsController_prescription",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prescription for a consultation (owner or admin)",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/consultations/{id}/start": {
+      "post": {
+        "operationId": "ConsultationsController_start",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "SCHEDULED -> IN_PROGRESS. Creates a (simulated) video session.",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/consultations/{id}/complete": {
+      "post": {
+        "operationId": "ConsultationsController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteConsultationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "IN_PROGRESS -> COMPLETED",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/consultations/{id}/no-show": {
+      "post": {
+        "operationId": "ConsultationsController_noShow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "SCHEDULED -> NO_SHOW (after the scheduled start time)",
+        "tags": [
+          "consultations"
+        ]
+      }
+    },
+    "/prescriptions": {
+      "post": {
+        "operationId": "PrescriptionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrescriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Issue a prescription for an in-progress or completed consultation",
+        "tags": [
+          "prescriptions"
+        ]
+      },
+      "get": {
+        "operationId": "PrescriptionsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prescriptions visible to the caller",
+        "tags": [
+          "prescriptions"
+        ]
+      }
+    },
+    "/prescriptions/{id}": {
+      "get": {
+        "operationId": "PrescriptionsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Prescription by id (patient owner, issuing doctor or admin)",
+        "tags": [
+          "prescriptions"
+        ]
+      }
+    },
+    "/payments/intents": {
+      "post": {
+        "operationId": "PaymentsController_createIntent",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentIntentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or re-use a payment intent for a scheduled consultation (Stripe or mock)",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "operationId": "PaymentsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Payment status (owner or admin)",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}/sync": {
+      "post": {
+        "operationId": "PaymentsController_sync",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reconcile the payment with the provider (e.g. right after the customer confirmed on Stripe)",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/webhook": {
+      "post": {
+        "operationId": "PaymentsController_webhook",
+        "parameters": [
+          {
+            "name": "stripe-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Stripe webhook (signature verified, de-duplicated by event id)",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}/mock-confirm": {
+      "post": {
+        "operationId": "PaymentsController_mockConfirm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MockConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "SIMULATION ONLY: settle a payment when the mock provider is active",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/admin/analytics/overview": {
+      "get": {
+        "operationId": "AdminController_overview",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to 30 days ago",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to now",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Booking, consultation, payment and slot aggregates for a date range",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/analytics/doctors": {
+      "get": {
+        "operationId": "AdminController_doctors",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to 30 days ago",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO 8601, defaults to now",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Per-doctor slot utilization and consultation outcomes",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_liveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "HealthController_readiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Readiness probe (database reachable)",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Amrutam Telemedicine API",
+    "description": "REST API for patients, doctors and admins: authentication, doctor search, availability, bookings, consultations, prescriptions, payments and admin analytics.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": ""
+    },
+    {
+      "name": "users",
+      "description": ""
+    },
+    {
+      "name": "doctors",
+      "description": ""
+    },
+    {
+      "name": "availability",
+      "description": ""
+    },
+    {
+      "name": "bookings",
+      "description": ""
+    },
+    {
+      "name": "consultations",
+      "description": ""
+    },
+    {
+      "name": "prescriptions",
+      "description": ""
+    },
+    {
+      "name": "payments",
+      "description": ""
+    },
+    {
+      "name": "admin",
+      "description": ""
+    },
+    {
+      "name": "health",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "TokenPairResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "accessTokenExpiresIn": {
+            "type": "number",
+            "description": "Seconds until the access token expires"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "PATIENT",
+              "DOCTOR",
+              "ADMIN"
+            ]
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "accessTokenExpiresIn",
+          "role"
+        ]
+      },
+      "MfaRequiredResponse": {
+        "type": "object",
+        "properties": {
+          "mfaRequired": {
+            "type": "boolean",
+            "example": true
+          },
+          "mfaToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mfaRequired",
+          "mfaToken"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "patient@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Str0ng!Passw0rd",
+            "minLength": 10
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Asha"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Verma"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919876543210"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "PATIENT",
+              "DOCTOR"
+            ],
+            "default": "PATIENT",
+            "description": "Admins cannot self-register."
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "patient@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Str0ng!Passw0rd"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "MfaVerifyDto": {
+        "type": "object",
+        "properties": {
+          "mfaToken": {
+            "type": "string",
+            "description": "Token returned by /auth/login when MFA is required"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "mfaToken",
+          "code"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "MfaCodeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "example": "1990-05-21"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "MALE",
+              "FEMALE",
+              "OTHER",
+              "UNDISCLOSED"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Kolkata"
+          }
+        }
+      },
+      "ChangeRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "PATIENT",
+              "DOCTOR",
+              "ADMIN"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "ChangeStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "UpsertDoctorProfileDto": {
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "type": "string",
+            "example": "Ayurveda"
+          },
+          "qualifications": {
+            "example": [
+              "BAMS",
+              "MD"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bio": {
+            "type": "string"
+          },
+          "yearsOfExperience": {
+            "type": "number",
+            "example": 8
+          },
+          "languages": {
+            "example": [
+              "en",
+              "hi"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "consultationFeeMinor": {
+            "type": "number",
+            "example": 50000,
+            "description": "Fee in minor units (e.g. paise). 50000 = INR 500.00"
+          },
+          "currency": {
+            "type": "string",
+            "example": "INR",
+            "default": "INR"
+          }
+        },
+        "required": [
+          "specialization",
+          "consultationFeeMinor"
+        ]
+      },
+      "UpdateDoctorProfileDto": {
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "type": "string"
+          },
+          "qualifications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bio": {
+            "type": "string"
+          },
+          "yearsOfExperience": {
+            "type": "number"
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "consultationFeeMinor": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "VerifyDoctorDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "SlotInputDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "endsAt": {
+            "type": "string",
+            "example": "2026-11-01T09:30:00.000Z"
+          }
+        },
+        "required": [
+          "startsAt",
+          "endsAt"
+        ]
+      },
+      "CreateSlotsDto": {
+        "type": "object",
+        "properties": {
+          "slots": {
+            "description": "Up to 100 slots per request",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SlotInputDto"
+            }
+          }
+        },
+        "required": [
+          "slots"
+        ]
+      },
+      "GenerateSlotsDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "to": {
+            "type": "string",
+            "example": "2026-11-01T13:00:00.000Z"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 30,
+            "description": "Slot length in minutes"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "durationMinutes"
+        ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "doctorId": {
+            "type": "string"
+          },
+          "slotId": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "VIDEO",
+              "AUDIO",
+              "CHAT"
+            ],
+            "default": "VIDEO"
+          },
+          "reasonForVisit": {
+            "type": "string",
+            "description": "Short reason shown to the doctor"
+          }
+        },
+        "required": [
+          "doctorId",
+          "slotId"
+        ]
+      },
+      "CancelBookingDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CompleteConsultationDto": {
+        "type": "object",
+        "properties": {
+          "doctorNotes": {
+            "type": "string",
+            "description": "Clinical notes. Stored, never logged."
+          }
+        }
+      },
+      "PrescriptionItemDto": {
+        "type": "object",
+        "properties": {
+          "medicationName": {
+            "type": "string",
+            "example": "Ashwagandha capsules"
+          },
+          "dosage": {
+            "type": "string",
+            "example": "500mg"
+          },
+          "frequency": {
+            "type": "string",
+            "example": "Twice daily after meals"
+          },
+          "durationDays": {
+            "type": "number",
+            "example": 30
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "medicationName",
+          "dosage",
+          "frequency",
+          "durationDays"
+        ]
+      },
+      "CreatePrescriptionDto": {
+        "type": "object",
+        "properties": {
+          "consultationId": {
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string",
+            "example": "Mild vata imbalance"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "validUntil": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrescriptionItemDto"
+            }
+          }
+        },
+        "required": [
+          "consultationId",
+          "diagnosis",
+          "items"
+        ]
+      },
+      "CreatePaymentIntentDto": {
+        "type": "object",
+        "properties": {
+          "consultationId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "consultationId"
+        ]
+      },
+      "MockConfirmDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "succeeded",
+              "failed"
+            ],
+            "default": "succeeded"
+          }
+        }
+      }
+    }
+  }
+}
