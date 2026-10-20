@@ -1,0 +1,16 @@
+# Netlify configuration for the frontend.
+# Site settings: base directory = frontend (this folder); everything else comes from here.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Single-page app: every path is handled by React Router, so deep links
+# such as /session/<id> (the consultation join link) must serve index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
